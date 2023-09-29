@@ -22,9 +22,21 @@ Botones= (136, 192, 208)
 Texto= (46, 52, 64)
 Destacado= (191, 97, 106)
 
+
+ancho_jugador = 20
+alto_jugador = 50
+
+posicion_jugador1 = (50, HEIGHT // 2 - 25)
+posicion_jugador2 = (WIDTH - 70, HEIGHT // 2 - 25)
+
+
+inicio_linea_suelo = (0 + 15, posicion_jugador1[1] + alto_jugador)
+fin_linea_suelo = (WIDTH -15 , posicion_jugador1[1] + alto_jugador)
+
+
 # Jugadores
-player1 = pygame.Rect(50, HEIGHT // 2 - 25, 20, 50)
-player2 = pygame.Rect(WIDTH - 70, HEIGHT // 2 - 25, 20, 50)
+player1 = pygame.Rect(posicion_jugador1[0], posicion_jugador1[1], ancho_jugador, alto_jugador)
+player2 = pygame.Rect(posicion_jugador2[0], posicion_jugador2[1], ancho_jugador, alto_jugador)
 
 # Obstáculo (por defecto, no hay obstáculo)
 obstacle = None
@@ -35,7 +47,7 @@ wind_direction = 0  # 0 para viento hacia la izquierda, 1 para viento hacia la d
 
 # Función para calcular la trayectoria del proyectil
 def calcular_trayectoria(angle, v0, wind_speed, player_rect):
-    g = 0.5  # Gravedad simulada
+    g = 2  # Gravedad simulada
     t = 0
     x0, y0 = player_rect.centerx, player_rect.centery
     radianes = math.radians(angle)
@@ -72,6 +84,10 @@ def calcular_trayectoria(angle, v0, wind_speed, player_rect):
         # Verificar colisión con los límites de la pantalla
         if x < 0 or x > WIDTH:
             return None  # Fuera de pantalla, juego sigue
+        
+        # Verificar colisión con el suelo
+        if colision_circulo_linea((x, y), 5, inicio_linea_suelo, fin_linea_suelo):
+            return None
 
         pygame.display.update()
 
@@ -89,6 +105,40 @@ def ingresar_parametros(player_name):
     root.destroy()
     return angle, v0
 
+
+def colision_circulo_linea(centro_circulo, radio_circulo, inicio_linea, fin_linea):
+    # Línea representada desde inicio_linea hasta fin_linea
+    # Círculo representado por centro_circulo y radio_circulo
+
+    # Calcula la distancia del centro del círculo a la línea
+    dx = fin_linea[0] - inicio_linea[0]
+    dy = fin_linea[1] - inicio_linea[1]
+
+    longitud_cuadrada = dx*dx + dy*dy
+
+    # Verifica si la longitud de la línea es cero (para evitar división por cero)
+    if longitud_cuadrada == 0:
+        return False
+
+    # Calcula el t que minimiza la distancia.
+    t = ((centro_circulo[0] - inicio_linea[0]) * dx + (centro_circulo[1] - inicio_linea[1]) * dy) / longitud_cuadrada
+
+    # Encuentra el punto más cercano en la línea al centro del círculo
+    if t < 0:
+        punto_mas_cercano = inicio_linea
+    elif t > 1:
+        punto_mas_cercano = fin_linea
+    else:
+        punto_mas_cercano = (inicio_linea[0] + t * dx, inicio_linea[1] + t * dy)
+
+    # Calcula la distancia entre el centro del círculo y este punto más cercano
+    distancia_cuadrada = (centro_circulo[0] - punto_mas_cercano[0])**2 + (centro_circulo[1] - punto_mas_cercano[1])**2
+
+    # Si la distancia es menor que el radio del círculo, están colisionando
+    return distancia_cuadrada < radio_circulo**2
+
+
+
 # Preguntar al jugador si desea insertar un obstáculo y especificar la dificultad
 while True:
     root = tk.Tk()
@@ -100,14 +150,14 @@ while True:
         dificultad_obstaculo = simpledialog.askstring("Dificultad","Selecciona la dificultad del obstáculo (none/easy/medium/hard): ")
         #dificultad_obstaculo = input("Selecciona la dificultad del obstáculo (none/easy/medium/hard): ").lower()
         if dificultad_obstaculo == "easy":
-            # Insertar un obstáculo pequeño
-            obstacle = pygame.Rect(random.randint(100, 300), random.randint(100, 400), 30, 30)
+            alto = random.randint(100, 130)
+            obstacle = pygame.Rect(random.randint(200, 500), inicio_linea_suelo[1] - alto, ancho_jugador, alto)
         elif dificultad_obstaculo == "medium":
-            # Insertar un obstáculo mediano
-            obstacle = pygame.Rect(random.randint(100, 300), random.randint(100, 400), 50, 50)
+            alto = random.randint(120, 150)
+            obstacle = pygame.Rect(random.randint(200, 500), inicio_linea_suelo[1] - alto, ancho_jugador, alto)
         elif dificultad_obstaculo == "hard":
-            # Insertar un obstáculo grande
-            obstacle = pygame.Rect(random.randint(100, 300), random.randint(100, 400), 70, 70)
+            alto = random.randint(130, 200)
+            obstacle = pygame.Rect(random.randint(200, 500), inicio_linea_suelo[1] - alto, ancho_jugador, alto)
         break
     elif obstaculo_input == "no":
         break
@@ -142,6 +192,7 @@ while running:
     #screen.fill(WHITE)
     pygame.draw.rect(screen, Botones, player1)
     pygame.draw.rect(screen, Destacado, player2)
+    pygame.draw.line(screen, (255, 0, 0), inicio_linea_suelo, fin_linea_suelo, 5)
 
     # Dibuja el obstáculo si está presente
     if obstacle:
@@ -159,9 +210,9 @@ while running:
 
     # Turno del jugador 1 (lanzamiento de izquierda a derecha)
     pygame.display.set_caption("Turno de Player 1")
-    input("Presiona Enter para lanzar el proyectil...")
+    # input("Presiona Enter para lanzar el proyectil...")
     angle, v0 = ingresar_parametros("Player 1")
-    wind_speed = random.uniform(0, 5) if wind else 0
+    wind_speed = random.uniform(0, 1) if wind else 0
     if wind:
         if wind_direction==1:
             direct="-->"
@@ -180,7 +231,7 @@ while running:
 
     # Turno del jugador 2 (lanzamiento de derecha a izquierda)
     pygame.display.set_caption("Turno de Player 2")
-    input("Presiona Enter para lanzar el proyectil...")
+    # input("Presiona Enter para lanzar el proyectil...")
     angle, v0 = ingresar_parametros("Player 2")
     wind_speed = random.uniform(0, 5) if wind else 0
     resultado = calcular_trayectoria(angle, v0, wind_speed, player2)
