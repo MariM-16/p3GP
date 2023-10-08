@@ -29,6 +29,8 @@ alto_jugador = 50
 posicion_jugador1 = (50, HEIGHT // 2 - 25)
 posicion_jugador2 = (WIDTH - 70, HEIGHT // 2 - 25)
 
+posicion_obstacle = abs(posicion_jugador1[0] - posicion_jugador2[0])/2 + 70
+
 
 inicio_linea_suelo = (0 + 15, posicion_jugador1[1] + alto_jugador)
 fin_linea_suelo = (WIDTH -15 , posicion_jugador1[1] + alto_jugador)
@@ -151,92 +153,102 @@ while True:
         #dificultad_obstaculo = input("Selecciona la dificultad del obstáculo (none/easy/medium/hard): ").lower()
         if dificultad_obstaculo == "easy":
             alto = random.randint(100, 130)
-            obstacle = pygame.Rect(random.randint(200, 500), inicio_linea_suelo[1] - alto, ancho_jugador, alto)
+            obstacle = pygame.Rect(posicion_obstacle, inicio_linea_suelo[1] - alto, ancho_jugador, alto)
         elif dificultad_obstaculo == "medium":
             alto = random.randint(120, 150)
-            obstacle = pygame.Rect(random.randint(200, 500), inicio_linea_suelo[1] - alto, ancho_jugador, alto)
+            obstacle = pygame.Rect(posicion_obstacle, inicio_linea_suelo[1] - alto, ancho_jugador, alto)
         elif dificultad_obstaculo == "hard":
             alto = random.randint(130, 200)
-            obstacle = pygame.Rect(random.randint(200, 500), inicio_linea_suelo[1] - alto, ancho_jugador, alto)
+            obstacle = pygame.Rect(posicion_obstacle, inicio_linea_suelo[1] - alto, ancho_jugador, alto)
         break
     elif obstaculo_input == "no":
         break
     root.destroy()
-# Preguntar al jugador si hay viento y especificar la magnitud y dificultad
-while True:
-    root = tk.Tk()
-    root.withdraw()  # Ocultar la ventana principal de Tkinter
 
-    viento_input = simpledialog.askstring("Viento","¿Hay viento? (yes/no): ")
-    #viento_input = input("¿Hay viento? (yes/no): ").lower()
-    if viento_input == "yes":
-        dificultad_viento = simpledialog.askstring("Dificultad","Selecciona la dificultad del viento (none/easy/medium/hard): ")
-        #dificultad_viento = input("Selecciona la dificultad del viento (none/easy/medium/hard): ").lower()
-        if dificultad_viento != "none":
-            wind = dificultad_viento
-            wind_direction = random.randint(0, 1)  # Aleatoriamente hacia izquierda o derecha
-        break
-    elif viento_input == "no":
-        break
-    root.destroy()
 
 # Bucle principal del juego
 running = True
-turno = "Player 1"
-
+en_juego = True
 while running:
+    turno = "Player 1"
+    # Preguntar al jugador si hay viento y especificar la magnitud y dificultad
+    while True:
+        root = tk.Tk()
+        root.withdraw()  # Ocultar la ventana principal de Tkinter
+
+        viento_input = simpledialog.askstring("Viento","¿Hay viento? (yes/no): ")
+        #viento_input = input("¿Hay viento? (yes/no): ").lower()
+        if viento_input == "yes":
+            dificultad_viento = simpledialog.askstring("Dificultad","Selecciona la dificultad del viento (none/easy/medium/hard): ")
+            #dificultad_viento = input("Selecciona la dificultad del viento (none/easy/medium/hard): ").lower()
+            if dificultad_viento != "none":
+                wind = dificultad_viento
+                wind_direction = random.randint(0, 1)  # Aleatoriamente hacia izquierda o derecha
+            break
+        elif viento_input == "no":
+            break
+        root.destroy()
+
+    while en_juego:
+        screen.fill(Fondo_principal)
+        #screen.fill(WHITE)
+        pygame.draw.rect(screen, Botones, player1)
+        pygame.draw.rect(screen, Destacado, player2)
+        pygame.draw.line(screen, (255, 0, 0), inicio_linea_suelo, fin_linea_suelo, 5)
+
+        # Dibuja el obstáculo si está presente
+        if obstacle:
+            pygame.draw.rect(screen, BLACK, obstacle)
+
+        # Dibuja el viento si está presente
+        if wind:
+            wind_str = "WIND: " + wind 
+            font = pygame.font.Font(None, 36)
+            #text = font.render(wind_str, True, RED)
+
+            text = font.render(wind_str, True, Texto)
+            text_rect = text.get_rect(center=(WIDTH // 2, 20))
+            screen.blit(text, text_rect)
+
+        # Turno del jugador 1 (lanzamiento de izquierda a derecha)
+        pygame.display.set_caption("Turno de Player 1")
+        # input("Presiona Enter para lanzar el proyectil...")
+        angle, v0 = ingresar_parametros("Player 1")
+        wind_speed = 1 if wind else 0
+        if wind:
+            if wind_direction==1:
+                direct="-->"
+            if wind_direction==0:
+                direct="<--"
+            wind_str = direct
+            font = pygame.font.Font(None, 36)
+            #text = font.render(wind_str, True, BLACK)
+            text = font.render(wind_str, True, Texto)
+            text_rect = text.get_rect(center=(WIDTH // 2, 50))
+            screen.blit(text, text_rect)
+        resultado = calcular_trayectoria(angle, v0, wind_speed, player1)
+        if resultado == "Player 1":
+            print("¡Player 1 gana!")
+            en_juego = False
+            break
+
+        # Turno del jugador 2 (lanzamiento de derecha a izquierda)
+        pygame.display.set_caption("Turno de Player 2")
+        # input("Presiona Enter para lanzar el proyectil...")
+        angle, v0 = ingresar_parametros("Player 2")
+        wind_speed = 1 if wind else 0
+        resultado = calcular_trayectoria(angle, v0, wind_speed, player2)
+        if resultado == "Player 2":
+            print("¡Player 2 gana!")
+            en_juego = False
+            break
+    response = tk.messagebox.askyesno("decea continuar","¿Desea continuar jugando?")
+
+    if response==False:
+        running=False
+    
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
-    screen.fill(Fondo_principal)
-    #screen.fill(WHITE)
-    pygame.draw.rect(screen, Botones, player1)
-    pygame.draw.rect(screen, Destacado, player2)
-    pygame.draw.line(screen, (255, 0, 0), inicio_linea_suelo, fin_linea_suelo, 5)
-
-    # Dibuja el obstáculo si está presente
-    if obstacle:
-        pygame.draw.rect(screen, BLACK, obstacle)
-
-    # Dibuja el viento si está presente
-    if wind:
-        wind_str = "WIND: " + wind 
-        font = pygame.font.Font(None, 36)
-        #text = font.render(wind_str, True, RED)
-
-        text = font.render(wind_str, True, Texto)
-        text_rect = text.get_rect(center=(WIDTH // 2, 20))
-        screen.blit(text, text_rect)
-
-    # Turno del jugador 1 (lanzamiento de izquierda a derecha)
-    pygame.display.set_caption("Turno de Player 1")
-    # input("Presiona Enter para lanzar el proyectil...")
-    angle, v0 = ingresar_parametros("Player 1")
-    wind_speed = random.uniform(0, 1) if wind else 0
-    if wind:
-        if wind_direction==1:
-            direct="-->"
-        if wind_direction==0:
-            direct="<--"
-        wind_str = direct
-        font = pygame.font.Font(None, 36)
-        #text = font.render(wind_str, True, BLACK)
-        text = font.render(wind_str, True, Texto)
-        text_rect = text.get_rect(center=(WIDTH // 2, 50))
-        screen.blit(text, text_rect)
-    resultado = calcular_trayectoria(angle, v0, wind_speed, player1)
-    if resultado == "Player 1":
-        print("¡Player 1 gana!")
-        break
-
-    # Turno del jugador 2 (lanzamiento de derecha a izquierda)
-    pygame.display.set_caption("Turno de Player 2")
-    # input("Presiona Enter para lanzar el proyectil...")
-    angle, v0 = ingresar_parametros("Player 2")
-    wind_speed = random.uniform(0, 5) if wind else 0
-    resultado = calcular_trayectoria(angle, v0, wind_speed, player2)
-    if resultado == "Player 2":
-        print("¡Player 2 gana!")
-        break
 
 pygame.quit()
