@@ -1,4 +1,5 @@
 import pygame
+import sys
 import random
 import math
 import tkinter as tk
@@ -141,29 +142,7 @@ def colision_circulo_linea(centro_circulo, radio_circulo, inicio_linea, fin_line
 
 
 
-# Preguntar al jugador si desea insertar un obstáculo y especificar la dificultad
-while True:
-    root = tk.Tk()
-    root.withdraw()  # Ocultar la ventana principal de Tkinter
-    obstaculo_input = simpledialog.askstring("Obstaculo","¿Deseas insertar un obstáculo? (yes/no): ")
 
-    #obstaculo_input = input("¿Deseas insertar un obstáculo? (yes/no): ").lower()
-    if obstaculo_input == "yes":
-        dificultad_obstaculo = simpledialog.askstring("Dificultad","Selecciona la dificultad del obstáculo (none/easy/medium/hard): ")
-        #dificultad_obstaculo = input("Selecciona la dificultad del obstáculo (none/easy/medium/hard): ").lower()
-        if dificultad_obstaculo == "easy":
-            alto = random.randint(100, 130)
-            obstacle = pygame.Rect(posicion_obstacle, inicio_linea_suelo[1] - alto, ancho_jugador, alto)
-        elif dificultad_obstaculo == "medium":
-            alto = random.randint(120, 150)
-            obstacle = pygame.Rect(posicion_obstacle, inicio_linea_suelo[1] - alto, ancho_jugador, alto)
-        elif dificultad_obstaculo == "hard":
-            alto = random.randint(130, 200)
-            obstacle = pygame.Rect(posicion_obstacle, inicio_linea_suelo[1] - alto, ancho_jugador, alto)
-        break
-    elif obstaculo_input == "no":
-        break
-    root.destroy()
 
 
 # Bucle principal del juego
@@ -171,6 +150,29 @@ running = True
 en_juego = True
 while running:
     turno = "Player 1"
+    # Preguntar al jugador si desea insertar un obstáculo y especificar la dificultad
+    while True:
+        root = tk.Tk()
+        root.withdraw()  # Ocultar la ventana principal de Tkinter
+        obstaculo_input = simpledialog.askstring("Obstaculo","¿Deseas insertar un obstáculo? (yes/no): ")
+
+        #obstaculo_input = input("¿Deseas insertar un obstáculo? (yes/no): ").lower()
+        if obstaculo_input == "yes":
+            dificultad_obstaculo = simpledialog.askstring("Dificultad","Selecciona la dificultad del obstáculo (none/easy/medium/hard): ")
+            #dificultad_obstaculo = input("Selecciona la dificultad del obstáculo (none/easy/medium/hard): ").lower()
+            if dificultad_obstaculo == "easy":
+                alto = random.randint(100, 130)
+                obstacle = pygame.Rect(posicion_obstacle, inicio_linea_suelo[1] - alto, ancho_jugador, alto)
+            elif dificultad_obstaculo == "medium":
+                alto = random.randint(120, 150)
+                obstacle = pygame.Rect(posicion_obstacle, inicio_linea_suelo[1] - alto, ancho_jugador, alto)
+            elif dificultad_obstaculo == "hard":
+                alto = random.randint(130, 200)
+                obstacle = pygame.Rect(posicion_obstacle, inicio_linea_suelo[1] - alto, ancho_jugador, alto)
+            break
+        elif obstaculo_input == "no":
+            break
+        root.destroy()
     # Preguntar al jugador si hay viento y especificar la magnitud y dificultad
     while True:
         root = tk.Tk()
@@ -246,9 +248,12 @@ while running:
 
     if response==False:
         running=False
+    else:
+        en_juego=True
     
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
 
 pygame.quit()
+sys.exit()
