@@ -244,7 +244,7 @@ while running:
             print("¡Player 2 gana!")
             en_juego = False
             break
-    response = tk.messagebox.askyesno("decea continuar","¿Desea continuar jugando?")
+    response = tk.messagebox.askyesno("Desea continuar","¿Desea continuar jugando?")
 
     if response==False:
         running=False
